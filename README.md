@@ -1,1 +1,1 @@
-# CylanceApiTools
+# cylance-api-tools
