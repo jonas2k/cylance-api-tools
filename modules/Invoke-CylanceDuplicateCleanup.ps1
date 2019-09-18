@@ -19,7 +19,7 @@ function Invoke-CylanceDuplicateCleanup {
 
     $params = @{
         "page"      = 1
-        "page_size" = 5000
+        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
     }
     
     $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
