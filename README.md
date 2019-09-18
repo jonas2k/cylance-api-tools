@@ -1,6 +1,6 @@
 # cylance-api-tools
 
-Collection of several Powershell cmdlets in order to execute certain tasks using the Cylance API.
+Collection of several Powershell cmdlets in order to execute certain tasks against the Cylance API.
 
 ## Usage
 
