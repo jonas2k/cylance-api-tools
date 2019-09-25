@@ -8,22 +8,9 @@ function Invoke-CylanceDuplicateCleanup {
         [String]$tenantId
     )
 
-    $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
-    $jwtToken = Get-JwtToken -secret $applicationSecret -tenantId $tenantId -appId $applicationId -expirationSeconds 120 -issuer $jwtIssuer
-    $bearerToken = Get-BearerToken -jwtToken $jwtToken
+    $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId
+    $response = Get-CylanceDevices -bearerToken $bearerToken
 
-    $headers = @{
-        "Accept"        = "application/json"
-        "Authorization" = "Bearer $bearerToken"
-    }
-
-    $params = @{
-        "page"      = 1
-        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
-    }
-    
-    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-    $response = Invoke-RestMethod -Method "GET" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers
     $duplicates = $response.page_items | Group-Object -Property "name" | Where-Object { $_.count -ge 2 }
 
     [Array]$devicesToBeRemoved = @()
@@ -34,12 +21,24 @@ function Invoke-CylanceDuplicateCleanup {
     }
 
     if ($devicesToBeRemoved.Count -gt 0) {
+
+        [Array]$fullDevicesToBeRemoved = @()
+        foreach ($device in $devicesToBeRemoved) {
+            try {
+                $fullDevicesToBeRemoved += Get-FullCylanceDevice -device $device -bearerToken $bearerToken
+            }
+            catch {
+                Write-Error "Can't get full device details for $($device.name). Adding device without additional information."
+                $fullDevicesToBeRemoved += $device
+            }
+        }
+
         Write-Host "Devices to be removed:"
-        Write-Host ($devicesToBeRemoved | Select-Object name, id, date_first_registered | Sort-Object -Property date_first_registered | Format-Table | Out-String)
-        $confirmation = Read-UserConfirmation -deviceCount $devicesToBeRemoved.Count
+        Write-Host ($fullDevicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user,os_version | Sort-Object -Property date_first_registered | Format-Table | Out-String)
+        $confirmation = Read-UserConfirmation -deviceCount $fullDevicesToBeRemoved.Count
 
         if ($confirmation -eq 'y') {
-            Start-DeviceDeletion -devices $devicesToBeRemoved
+            Start-DeviceDeletion -devices $fullDevicesToBeRemoved
         }
         else {
             Write-Host "Aborting."
