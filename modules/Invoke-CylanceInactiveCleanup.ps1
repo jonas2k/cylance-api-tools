@@ -10,32 +10,19 @@ function Invoke-CylanceInactiveCleanup {
         [int]$inactiveDays
     )
 
-    $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
-    $jwtToken = Get-JwtToken -secret $applicationSecret -tenantId $tenantId -appId $applicationId -expirationSeconds 120 -issuer $jwtIssuer
-    $bearerToken = Get-BearerToken -jwtToken $jwtToken
-
-    $headers = @{
-        "Accept"        = "application/json"
-        "Authorization" = "Bearer $bearerToken"
-    }
-
-    $params = @{
-        "page"      = 1
-        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
-    }
-    
     Write-Host "Checking devices, this may take a while."
 
-    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-    $response = Invoke-RestMethod -Method "GET" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers
-    $offline = $response.page_items | Where-Object { $null -ne $_.id -and $_.state -eq "Offline" -and (Get-DateIsOutOfRange -inputDate $_.date_first_registered -daysBack 1) }
+    $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId
+    $response = Get-CylanceDevices -bearerToken $bearerToken
+
+    $offlineDevices = $response.page_items | Where-Object { $null -ne $_.id -and $_.state -eq "Offline" -and (Test-DateIsOutOfRange -inputDate $_.date_first_registered -daysBack 1) }
 
     [Array]$devicesToBeRemoved = @()
     $daysAgo = (Get-Date).AddDays(-$inactiveDays)
 
-    foreach ($device in $offline) {
+    foreach ($device in $offlineDevices) {
         try {
-            $fullDevice = Invoke-RestMethod -Method "GET" -Uri ("$cylanceApiDevicesUri/{0}" -f $device.id) -Headers $headers
+            $fullDevice = Get-FullCylanceDevice -device $device -bearerToken $bearerToken
             if ($null -ne $fullDevice -and $null -eq $fullDevice.date_offline) {
                 Write-Host "Skipping $($fullDevice.name) since it seems to be online by now or there is no valid offline date."
             }
@@ -47,13 +34,14 @@ function Invoke-CylanceInactiveCleanup {
             }
         }
         catch {
+            Write-Error "Can't get full device details for $($device.name)."
             Write-Error "$($device.name): $($_.Exception.Message)"
         }
     }
 
     if ($devicesToBeRemoved.Count -gt 0) {
         Write-Host "Devices to be removed:"
-        Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline | Sort-Object -Property date_offline | Format-Table | Out-String)
+        Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user,os_version | Sort-Object -Property date_offline | Format-Table | Out-String)
         $confirmation = Read-UserConfirmation -deviceCount $devicesToBeRemoved.Count
 
         if ($confirmation -eq 'y') {

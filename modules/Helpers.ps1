@@ -1,15 +1,15 @@
 function Get-JwtToken {
     Param (
         [parameter(Mandatory = $true)]
+        [String]$appId,
+        [parameter(Mandatory = $true)]
         [String]$secret,
         [parameter(Mandatory = $true)]
         [String]$issuer,
         [parameter(Mandatory = $true)]
-        [String]$appId,
+        [int]$expirationSeconds,
         [parameter(Mandatory = $true)]
-        [String]$tenantId,
-        [parameter(Mandatory = $true)]
-        [int]$expirationSeconds
+        [String]$tenantId
     )
 
     $UtcNow = [int32](((Get-Date -Date ((Get-Date).ToUniversalTime()) -UFormat %s -Millisecond 0)) -Replace ("[,\.]\d*", ""))
@@ -68,9 +68,17 @@ function Get-HMACSHA256 {
 
 function Get-BearerToken {
     Param (
-        [parameter(Mandatory = $True)]
-        [String]$jwtToken
+        [parameter(Mandatory = $true)]
+        [String]$applicationId,
+        [parameter(Mandatory = $true)]
+        [String]$applicationSecret,
+        [parameter(Mandatory = $true)]
+        [String]$tenantId
     )
+
+    $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
+    $expirationSeconds = $MyInvocation.MyCommand.Module.PrivateData["expirationSeconds"]
+    $jwtToken = Get-JwtToken -appId $applicationId -secret $applicationSecret -tenantId $tenantId -expirationSeconds $expirationSeconds -issuer $jwtIssuer
 
     $headers = @{
         "Accept"       = "application/json"
@@ -101,7 +109,7 @@ function Get-Chunks {
     return $groupedItems
 }
 
-function Get-DateIsOutOfRange {
+function Test-DateIsOutOfRange {
     Param(
         [parameter(Mandatory = $true)]
         [datetime]$inputDate,
@@ -109,6 +117,42 @@ function Get-DateIsOutOfRange {
         [int]$daysBack
     )
     return ($inputDate).Date -lt (Get-Date).AddDays(-$daysBack).Date
+}
+
+function Get-CylanceDevices {
+    Param(
+        [parameter(Mandatory = $true)]
+        [string]$bearerToken
+    )
+
+    $headers = @{
+        "Accept"        = "application/json"
+        "Authorization" = "Bearer $bearerToken"
+    }
+
+    $params = @{
+        "page"      = 1
+        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
+    }
+
+    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
+    return Invoke-RestMethod -Method "GET" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers
+}
+
+function Get-FullCylanceDevice {
+    Param(
+        [parameter(Mandatory = $true)]
+        [array]$device,
+        [parameter(Mandatory = $true)]
+        [string]$bearerToken
+    )
+
+    $headers = @{
+        "Accept"        = "application/json"
+        "Authorization" = "Bearer $bearerToken"
+    }
+    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
+    return Invoke-RestMethod -Method "GET" -Uri ("$cylanceApiDevicesUri/{0}" -f $device.id) -Headers $headers
 }
 
 function Read-UserConfirmation {
@@ -141,6 +185,7 @@ function Start-DeviceDeletion {
             "device_ids" = @($group.id)
         }
         # Write-Host $params
+        $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
         Invoke-RestMethod -Method "DELETE" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers > $null
     }
     Write-Host "Deleted $($deviceIdsToBeRemoved.Count) devices."
