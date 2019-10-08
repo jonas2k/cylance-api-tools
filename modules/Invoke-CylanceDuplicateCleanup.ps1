@@ -34,7 +34,7 @@ function Invoke-CylanceDuplicateCleanup {
         }
 
         Write-Host "Devices to be removed:"
-        Write-Host ($fullDevicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user,os_version | Sort-Object -Property date_first_registered | Format-Table | Out-String)
+        Write-Host ($fullDevicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user, os_version | Sort-Object -Property date_first_registered | Format-Table -Wrap -AutoSize | Out-String)
         $confirmation = Read-UserConfirmation -deviceCount $fullDevicesToBeRemoved.Count
 
         if ($confirmation -eq 'y') {

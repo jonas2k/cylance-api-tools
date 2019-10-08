@@ -41,7 +41,7 @@ function Invoke-CylanceInactiveCleanup {
 
     if ($devicesToBeRemoved.Count -gt 0) {
         Write-Host "Devices to be removed:"
-        Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user,os_version | Sort-Object -Property date_offline | Format-Table | Out-String)
+        Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user, os_version | Sort-Object -Property date_offline | Format-Table -Wrap -AutoSize | Out-String)
         $confirmation = Read-UserConfirmation -deviceCount $devicesToBeRemoved.Count
 
         if ($confirmation -eq 'y') {
