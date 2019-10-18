@@ -2,6 +2,10 @@
 
 Collection of several Powershell cmdlets in order to execute certain tasks against the Cylance API.
 
+## Prerequisites
+
+The configured application needs the device privileges "read" and "delete token".
+
 ## Usage
 
 Eventually set execution policy and import the module.
