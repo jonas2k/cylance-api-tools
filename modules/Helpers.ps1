@@ -155,6 +155,35 @@ function Get-FullCylanceDevice {
     return Invoke-RestMethod -Method "GET" -Uri ("$cylanceApiDevicesUri/{0}" -f $device.id) -Headers $headers
 }
 
+function Remove-WhitelistedDevices {
+    Param(
+        [parameter(Mandatory = $true)]
+        [Array]$whitelistFile,
+        [parameter(Mandatory = $true)]
+        [Alias("devices")]
+        [Array]$devicesToBeRemoved
+    )
+
+    [Array]$whitelistedDevices = (Get-Content $whitelistFile |
+        ForEach-Object {
+            [PSCustomObject]@{
+                name = $_
+            }
+        })
+
+    if ($whitelistedDevices.Count -gt 0) {
+        $comparedDevices = Compare-Object -ReferenceObject $devicesToBeRemoved -DifferenceObject $whitelistedDevices -PassThru -Property name -IncludeEqual
+
+        $skippedDevices = $comparedDevices | Where-Object { $_.sideindicator -eq "==" }
+        $results = $comparedDevices | Where-Object { $_.sideindicator -eq "<=" }
+
+        if ($skippedDevices.Count -gt 0) {
+            Write-Host "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ",")." -ForegroundColor "Yellow"
+        }
+    }
+    return $results
+}
+
 function Read-UserConfirmation {
     Param(
         [parameter(Mandatory = $true)]
@@ -180,13 +209,22 @@ function Start-DeviceDeletion {
         "Content-Type"  = "application/json; charset=utf-8"
     }
 
+    [int32]$deletedDevicesCount = 0
     foreach ($group in $groupedDeviceIds) {
         $params = ConvertTo-Json @{
             "device_ids" = @($group.id)
         }
-        # Write-Host $params
-        $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-        Invoke-RestMethod -Method "DELETE" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers > $null
+
+        try {
+            # Write-Host $params
+            $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
+            Invoke-RestMethod -Method "DELETE" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers > $null
+            $deletedDevicesCount += $group.Count
+        }
+        catch {
+            Write-Host "$($_.Exception.Message)"
+        }
     }
-    Write-Host "Deleted $($deviceIdsToBeRemoved.Count) devices."
+    Write-Host "Deleted $deletedDevicesCount device(s)."
+
 }
