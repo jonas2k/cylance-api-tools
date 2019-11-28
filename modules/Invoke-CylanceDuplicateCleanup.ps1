@@ -5,7 +5,9 @@ function Invoke-CylanceDuplicateCleanup {
         [parameter(Mandatory = $true)]
         [String]$applicationSecret,
         [parameter(Mandatory = $true)]
-        [String]$tenantId
+        [String]$tenantId,
+        [parameter(Mandatory = $false)]
+        [String]$whitelistFile
     )
 
     $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId
@@ -18,6 +20,10 @@ function Invoke-CylanceDuplicateCleanup {
     foreach ($deviceGroup in $duplicates) {
         $currentDevices = $deviceGroup.Group | ForEach-Object { $_.date_first_registered = [DateTime]$_.date_first_registered; $_ } | Sort-Object date_first_registered | Select-Object -SkipLast 1
         $devicesToBeRemoved += $currentDevices
+    }
+
+    if (($devicesToBeRemoved.Count -gt 0) -and ($null -ne $whitelistFile) -and (Test-Path $whitelistFile)) {
+        $devicesToBeRemoved = Remove-WhitelistedDevices -whitelistFile $whitelistFile -devices $devicesToBeRemoved
     }
 
     if ($devicesToBeRemoved.Count -gt 0) {

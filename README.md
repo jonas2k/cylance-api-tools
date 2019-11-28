@@ -28,7 +28,7 @@ Invoke-CylanceDuplicateCleanup -applicationId $appId -applicationSecret $appSecr
 Searches for inactive devices and removes those whose last activity was past the specified number of days.
 
 ```PowerShell
-Invoke-CylanceInactiveCleanup -applicationId $appId -applicationSecret $appSecret -tenantId $tenId -inactiveDays 90
+Invoke-CylanceInactiveCleanup -applicationId $appId -applicationSecret $appSecret -tenantId $tenId -inactiveDays 75
 ```
 
 ## Device re-registration
@@ -69,4 +69,20 @@ if (Test-Path -Path $cylanceRegKey) {
     }
     Set-ItemProperty -Path $cylanceRegKey -Name "InstallToken" -Value $installToken
 }
+```
+## Whitelisting devices
+
+It is possible to whitelist devices by name to except them from deletion. Just create a plain text file containing the hostnames (one item per line) and pass it's path using the optional parameter `-whitelistFile`, e.g.
+
+whitelist.txt:
+```
+HOSTA
+HOSTB
+FOO
+BAR
+```
+
+Call:
+```PowerShell
+Invoke-CylanceDuplicateCleanup -whitelistFile "C:\path\to\whitelist.txt" -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
 ```

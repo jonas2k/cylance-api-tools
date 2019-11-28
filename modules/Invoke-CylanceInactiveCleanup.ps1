@@ -7,7 +7,9 @@ function Invoke-CylanceInactiveCleanup {
         [parameter(Mandatory = $true)]
         [String]$tenantId,
         [parameter(Mandatory = $true)]
-        [int]$inactiveDays
+        [int]$inactiveDays,
+        [parameter(Mandatory = $false)]
+        [String]$whitelistFile
     )
 
     Write-Host "Checking devices, this may take a while."
@@ -39,7 +41,12 @@ function Invoke-CylanceInactiveCleanup {
         }
     }
 
+    if (($devicesToBeRemoved.Count -gt 0) -and ($null -ne $whitelistFile) -and (Test-Path $whitelistFile)) {
+        $devicesToBeRemoved = Remove-WhitelistedDevices -whitelistFile $whitelistFile -devices $devicesToBeRemoved
+    }
+
     if ($devicesToBeRemoved.Count -gt 0) {
+
         Write-Host "Devices to be removed:"
         Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user, os_version | Sort-Object -Property date_offline | Format-Table -Wrap -AutoSize | Out-String)
         $confirmation = Read-UserConfirmation -deviceCount $devicesToBeRemoved.Count
