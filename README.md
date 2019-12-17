@@ -33,7 +33,7 @@ Invoke-CylanceInactiveCleanup -applicationId $appId -applicationSecret $appSecre
 
 ### Region
 
-The optional parameter `region` lets you specify your service endpoint region your organization belongs to. Valid values are `apne1`, `au`, `euc1`, `sae1` and `us`. You can also tab-cycle through these values when typing the command. If the parameter is omitted, North America is used as the default region. For exmaple, if you want to query the european servers:
+The optional parameter `-region` lets you specify your service endpoint region your organization belongs to. Valid values are `apne1`, `au`, `euc1`, `sae1` and `us`. You can also tab-cycle through these values when typing the command. If the parameter is omitted, North America is used as the default region. For example, if you want to query the european servers:
 
 ```PowerShell
 ... -region "euc1" ...
