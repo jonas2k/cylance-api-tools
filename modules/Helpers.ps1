@@ -73,7 +73,10 @@ function Get-BearerToken {
         [parameter(Mandatory = $true)]
         [String]$applicationSecret,
         [parameter(Mandatory = $true)]
-        [String]$tenantId
+        [String]$tenantId,
+        [parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [String]$region
     )
 
     $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
@@ -86,8 +89,7 @@ function Get-BearerToken {
     }
 
     $body = ConvertTo-Json @{ "auth_token" = $jwtToken }
-    $cylanceApiAuthUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiAuthUri"]
-    return (Invoke-RestMethod -Method "POST" -Uri $cylanceApiAuthUri -Body $body -Headers $headers).access_token
+    return (Invoke-RestMethod -Method "POST" -Uri $(Get-CylanceApiUri -type "Auth" -region $region) -Body $body -Headers $headers).access_token
 }
 
 function Get-Chunks {
@@ -122,7 +124,10 @@ function Test-DateIsOutOfRange {
 function Get-CylanceDevices {
     Param(
         [parameter(Mandatory = $true)]
-        [string]$bearerToken
+        [string]$bearerToken,
+        [parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [String]$region
     )
 
     $headers = @{
@@ -135,8 +140,7 @@ function Get-CylanceDevices {
         "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
     }
 
-    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-    return Invoke-RestMethod -Method "GET" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers
+    return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers
 }
 
 function Get-FullCylanceDevice {
@@ -144,15 +148,17 @@ function Get-FullCylanceDevice {
         [parameter(Mandatory = $true)]
         [array]$device,
         [parameter(Mandatory = $true)]
-        [string]$bearerToken
+        [string]$bearerToken,
+        [parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [String]$region
     )
 
     $headers = @{
         "Accept"        = "application/json"
         "Authorization" = "Bearer $bearerToken"
     }
-    $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-    return Invoke-RestMethod -Method "GET" -Uri ("$cylanceApiDevicesUri/{0}" -f $device.id) -Headers $headers
+    return Invoke-RestMethod -Method "GET" -Uri ("$(Get-CylanceApiUri -type "Devices" -region $region)/{0}" -f $device.id) -Headers $headers
 }
 
 function Remove-WhitelistedDevices {
@@ -197,7 +203,10 @@ function Start-DeviceDeletion {
     Param(
         [parameter(Mandatory = $true)]
         [Alias("devices")]
-        [Array]$devicesToBeRemoved
+        [Array]$devicesToBeRemoved,
+        [parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [String]$region
     )
     [Array]$deviceIdsToBeRemoved = @()
     $deviceIdsToBeRemoved += ($($devicesToBeRemoved | Select-Object -Property "id"))
@@ -217,14 +226,30 @@ function Start-DeviceDeletion {
 
         try {
             # Write-Host $params
-            $cylanceApiDevicesUri = $MyInvocation.MyCommand.Module.PrivateData["cylanceApiDevicesUri"]
-            Invoke-RestMethod -Method "DELETE" -Uri $cylanceApiDevicesUri -Body $params -Headers $headers > $null
+            Invoke-RestMethod -Method "DELETE" -Uri $(Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers > $null
             $deletedDevicesCount += $group.Count
         }
         catch {
-            Write-Host "$($_.Exception.Message)"
+            Write-Error "$($_.Exception.Message)"
         }
     }
     Write-Host "Deleted $deletedDevicesCount device(s)."
+}
 
+function Get-CylanceApiUri {
+    Param(
+        [parameter(Mandatory = $false)]
+        [ValidateSet("Auth", "Devices")]
+        [Array]$type,
+        [parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [Array]$region
+    )
+    $cylanceApiUri = "{0}{1}" -f $MyInvocation.MyCommand.Module.PrivateData["cylanceApiBaseUri"], $MyInvocation.MyCommand.Module.PrivateData["cylanceApi{0}Suffix" -f $type]
+    
+    if (![string]::IsNullOrEmpty($region)) {
+        $regionKey = ($MyInvocation.MyCommand.Module.PrivateData["cylanceApiRegions"])[$region]
+        $cylanceApiUri = $cylanceApiUri.Insert($cylanceApiUri.IndexOf("."), $regionKey)
+    }
+    return $cylanceApiUri 
 }

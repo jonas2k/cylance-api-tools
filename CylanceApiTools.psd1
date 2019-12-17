@@ -87,12 +87,14 @@
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
     PrivateData          = @{
-        jwtIssuer            = "http://cylance.com"
-        cylanceApiDevicesUri = "https://protectapi-euc1.cylance.com/devices/v2"
-        cylanceApiAuthUri    = "https://protectapi-euc1.cylance.com/auth/v2/token"
-        devicePageSize       = 10000
-        expirationSeconds    = 120
-        PSData               = @{
+        jwtIssuer               = "http://cylance.com"
+        cylanceApiBaseUri       = "https://protectapi.cylance.com/"
+        cylanceApiDevicesSuffix = "devices/v2"
+        cylanceApiAuthSuffix    = "auth/v2/token"
+        cylanceApiRegions       = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
+        devicePageSize          = 10000
+        expirationSeconds       = 120
+        PSData                  = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
             # Tags = @()
