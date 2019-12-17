@@ -31,6 +31,22 @@ Searches for inactive devices and removes those whose last activity was past the
 Invoke-CylanceInactiveCleanup -applicationId $appId -applicationSecret $appSecret -tenantId $tenId -inactiveDays 75
 ```
 
+### Region
+
+The optional parameter `region` lets you specify your service endpoint region your organization belongs to. Valid values are `apne1`, `au`, `euc1`, `sae1` and `us`. You can also tab-cycle through these values when typing the command. If the parameter is omitted, North America is used as the default region. For exmaple, if you want to query the european servers:
+
+```PowerShell
+... -region "euc1" ...
+```
+
+### Environment variables
+
+Furthermore, you can avoid to enter appid, secret and tenant GUIDs directly into the terminal by creating environment variables. Access them e.g. like this:
+
+```PowerShell
+... -applicationId $env:appId -applicationSecret $env:appSecret -tenantId $env:tenId ...
+```
+
 ## Device re-registration
 
 If a deleted device is reactivated, it may be in an erroneous state, because the agent has no connection to the management instance. One possible way to solve this problem is the use of SCCM compliance baselines. Here are examples how an automatic re-registration mechanism can be implemented.
