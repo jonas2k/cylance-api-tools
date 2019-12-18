@@ -88,7 +88,7 @@ if (Test-Path -Path $cylanceRegKey) {
 ```
 ## Whitelisting devices
 
-It is possible to whitelist devices by name to except them from deletion. Just create a plain text file containing the hostnames (one item per line) and pass it's path using the optional parameter `-whitelistFile`, e.g.
+It is possible to whitelist devices by name to except them from deletion. Just create a plain text file containing the hostnames (one item per line) and pass its path using the optional parameter `-whitelistFile`, e.g.
 
 whitelist.txt:
 ```
