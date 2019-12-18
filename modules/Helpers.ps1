@@ -238,7 +238,7 @@ function Start-DeviceDeletion {
 
 function Get-CylanceApiUri {
     Param(
-        [parameter(Mandatory = $false)]
+        [parameter(Mandatory = $true)]
         [ValidateSet("Auth", "Devices")]
         [Array]$type,
         [parameter(Mandatory = $false)]
