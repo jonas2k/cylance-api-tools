@@ -14,6 +14,7 @@ function Invoke-CylanceDuplicateCleanup {
         [String]$region
     )
 
+    Write-Banner
     try {
         $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId -region $region
         $response = Get-CylanceDevices -bearerToken $bearerToken -region $region

@@ -16,6 +16,7 @@ function Invoke-CylanceInactiveCleanup {
         [String]$region
     )
 
+    Write-Banner
     try {
         $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId -region $region
         Write-Host "Checking devices, this may take a while."

@@ -225,7 +225,7 @@ function Start-DeviceDeletion {
         }
 
         try {
-            # Write-Host $params
+            # For debugging: Write-Host $params
             Invoke-RestMethod -Method "DELETE" -Uri $(Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers > $null
             $deletedDevicesCount += $group.Count
         }
@@ -252,4 +252,17 @@ function Get-CylanceApiUri {
         $cylanceApiUri = $cylanceApiUri.Insert($cylanceApiUri.IndexOf("."), $regionKey)
     }
     return $cylanceApiUri 
+}
+
+function Write-Banner {
+    $bannerAsciiArt =
+    @'
+  _____     __                  ___        _ ______          __  
+ / ___/_ __/ /__ ____  _______ / _ | ___  (_)_  __/__  ___  / /__
+/ /__/ // / / _ `/ _ \/ __/ -_) __ |/ _ \/ / / / / _ \/ _ \/ (_-<
+\___/\_, /_/\_,_/_//_/\__/\__/_/ |_/ .__/_/ /_/  \___/\___/_/___/
+    /___/                         /_/                            
+'@
+    Write-Host $bannerAsciiArt -ForegroundColor "Green"
+    Write-Host ("{0} v{1} by {2}`n" -f $MyInvocation.MyCommand.Module.Name, $MyInvocation.MyCommand.Module.Version, $MyInvocation.MyCommand.Module.Author) -ForegroundColor "Green"
 }
