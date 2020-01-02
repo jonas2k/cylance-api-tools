@@ -23,7 +23,7 @@
     # CompanyName = 'Unknown'
 
     # Copyright statement for this module
-    # Copyright = '(c) reiter_j. All rights reserved.'
+    # Copyright = '(c) jonas2k. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description          = 'Collection of several Powershell cmdlets in order to execute certain tasks against the Cylance API.'
