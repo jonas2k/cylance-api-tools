@@ -15,6 +15,8 @@ Set-ExecutionPolicy RemoteSigned -Scope Process
 Import-Module .\CylanceApiTools.psd1
 ```
 
+Alternatively, you may want to install the module to a `$env:PSModulePath`, e.g. `C:\Windows\System32\WindowsPowerShell\v1.0\Modules\CylanceApiTools`.
+
 ### Invoke-CylanceDuplicateCleanup
 
 Searches for duplicate devices by hostname and removes all but the last one added.
