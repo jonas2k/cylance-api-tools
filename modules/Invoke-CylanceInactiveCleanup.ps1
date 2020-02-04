@@ -29,12 +29,12 @@ function Invoke-CylanceInactiveCleanup {
 
         foreach ($device in $offlineDevices) {
             try {
-                $fullDevice = Get-FullCylanceDevice -device $device -bearerToken $bearerToken -region $region
+                $fullDevice = Get-FullCylanceDevice -device $device.id -bearerToken $bearerToken -region $region
                 if ($null -ne $fullDevice -and $null -eq $fullDevice.date_offline) {
                     Write-Host "Skipping $($fullDevice.name) since it seems to be online by now or there is no valid offline date."
                 }
                 else {
-                    [datetime]$offlineDate = $fullDevice.date_offline
+                    [DateTime]$offlineDate = $fullDevice.date_offline
                     if ($offlineDate -lt $daysAgo) {
                         $devicesToBeRemoved += $fullDevice
                     }
@@ -53,7 +53,13 @@ function Invoke-CylanceInactiveCleanup {
         if ($devicesToBeRemoved.Count -gt 0) {
 
             Write-Host "Devices to be removed:"
-            Write-Host ($devicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user, os_version | Sort-Object -Property date_offline | Format-Table -Wrap -AutoSize | Out-String)
+            Write-Host ($devicesToBeRemoved | Select-Object @{Name = 'Name'; Expression = { "$($_.name)" } },
+                @{Name = 'ID'; Expression = { "$($_.id)" } },
+                @{Name = 'State'; Expression = { "$($_.state)" } },
+                @{Name = 'Registration date'; Expression = { ($_.date_first_registered) } },
+                @{Name = 'Offline date'; Expression = { ($_.date_offline) } },
+                @{Name = 'Last user'; Expression = { "$($_.last_logged_in_user)" } },
+                @{Name = 'OS'; Expression = { "$($_.os_version)" } } | Sort-Object -Property date_offline | Format-Table -Wrap -AutoSize | Out-String)
             $confirmation = Read-UserConfirmation -deviceCount $devicesToBeRemoved.Count
 
             if ($confirmation -eq 'y') {
@@ -68,9 +74,6 @@ function Invoke-CylanceInactiveCleanup {
         }
     }
     catch {
-        Write-Host $_.Exception.Message -ForegroundColor "Red"
-        if ($null -ne $_.ErrorDetails.Message) {
-            Write-Host ($_.ErrorDetails.Message | ConvertFrom-Json).message -ForegroundColor "Red"
-        }
+        Write-ExceptionToConsole($_)
     }
 }

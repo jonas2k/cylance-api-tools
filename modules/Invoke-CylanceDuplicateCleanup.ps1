@@ -37,7 +37,7 @@ function Invoke-CylanceDuplicateCleanup {
             [Array]$fullDevicesToBeRemoved = @()
             foreach ($device in $devicesToBeRemoved) {
                 try {
-                    $fullDevicesToBeRemoved += Get-FullCylanceDevice -device $device -bearerToken $bearerToken -region $region
+                    $fullDevicesToBeRemoved += Get-FullCylanceDevice -device $device.id -bearerToken $bearerToken -region $region
                 }
                 catch {
                     Write-Error "Can't get full device details for $($device.name). Adding device without additional information."
@@ -46,7 +46,13 @@ function Invoke-CylanceDuplicateCleanup {
             }
 
             Write-Host "Devices to be removed:"
-            Write-Host ($fullDevicesToBeRemoved | Select-Object name, id, state, date_first_registered, date_offline, last_logged_in_user, os_version | Sort-Object -Property date_first_registered | Format-Table -Wrap -AutoSize | Out-String)
+            Write-Host ($fullDevicesToBeRemoved | Select-Object @{Name = 'Name'; Expression = { "$($_.name)" } },
+                @{Name = 'ID'; Expression = { "$($_.id)" } },
+                @{Name = 'State'; Expression = { "$($_.state)" } },
+                @{Name = 'Registration date'; Expression = { ($_.date_first_registered) } },
+                @{Name = 'Offline date'; Expression = { ($_.date_offline) } },
+                @{Name = 'Last user'; Expression = { "$($_.last_logged_in_user)" } },
+                @{Name = 'OS'; Expression = { "$($_.os_version)" } } | Sort-Object -Property date_first_registered | Format-Table -Wrap -AutoSize | Out-String)
             $confirmation = Read-UserConfirmation -deviceCount $fullDevicesToBeRemoved.Count
 
             if ($confirmation -eq 'y') {
@@ -61,9 +67,6 @@ function Invoke-CylanceDuplicateCleanup {
         }
     }
     catch {
-        Write-Host $_.Exception.Message -ForegroundColor "Red"
-        if ($null -ne $_.ErrorDetails.Message) {
-            Write-Host ($_.ErrorDetails.Message | ConvertFrom-Json).message -ForegroundColor "Red"
-        }
+        Write-ExceptionToConsole($_)
     }
 }

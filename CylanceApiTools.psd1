@@ -62,10 +62,13 @@
     # FormatsToProcess = @()
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-    NestedModules        = @(".\modules\Invoke-CylanceDuplicateCleanup.ps1", ".\modules\Invoke-CylanceInactiveCleanup.ps1", ".\modules\Helpers.ps1")
+    NestedModules        = @(".\modules\Invoke-CylanceDuplicateCleanup.ps1",
+        ".\modules\Invoke-CylanceInactiveCleanup.ps1",
+        ".\modules\Show-MemProtectionEvents.ps1",
+        ".\modules\Helpers.ps1")
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport    = @("Invoke-CylanceDuplicateCleanup", "Invoke-CylanceInactiveCleanup")
+    FunctionsToExport    = @("Invoke-CylanceDuplicateCleanup", "Invoke-CylanceInactiveCleanup", "Show-MemProtectionEvents")
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport      = @()
@@ -91,9 +94,33 @@
         cylanceApiBaseUri       = "https://protectapi.cylance.com/"
         cylanceApiDevicesSuffix = "devices/v2"
         cylanceApiAuthSuffix    = "auth/v2/token"
+        cylanceApiMemSuffix     = "/memoryprotection/v2"
         cylanceApiRegions       = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
         devicePageSize          = 10000
         expirationSeconds       = 120
+        memProtectionActions    = @{
+            0 = "None";
+            1 = "Block";
+            2 = "Terminate"
+        }
+        memProtectionViolationTypes = @{
+            1 = "Stack Pivot";
+            2 = "Stack Protect";
+            3 = "Overwrite Code";
+            4 = "Remote Allocation of Memory";
+            5 = "Remote Mapping of Memory";
+            6 = "Remote Write to Memory";
+            7 = "Remote Write PE to Memory";
+            8 = "Remote Overwrite Code";
+            9 = "Remote Unmap of Memory";
+            10 = "Remote Thread Creation";
+            11 = "Remote APC Scheduled";
+            12 = "LSASS Read";
+            13 = "RAM Scraping";
+            22 = "Zero Allocate";
+            23 = "DYLD Injection";
+            24 = "Malicous Payload";
+        }
         PSData                  = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
