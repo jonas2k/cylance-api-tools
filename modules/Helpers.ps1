@@ -114,7 +114,7 @@ function Get-Chunks {
 function Test-DateIsOutOfRange {
     Param(
         [parameter(Mandatory = $true)]
-        [datetime]$inputDate,
+        [DateTime]$inputDate,
         [parameter(Mandatory = $true)]
         [int]$daysBack
     )

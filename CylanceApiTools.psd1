@@ -8,7 +8,7 @@
     # RootModule = ''
 
     # Version number of this module.
-    ModuleVersion        = '1.1'
+    ModuleVersion        = '1.2'
 
     # Supported PSEditions
     CompatiblePSEditions = @("Core")
@@ -94,7 +94,7 @@
         cylanceApiBaseUri       = "https://protectapi.cylance.com/"
         cylanceApiDevicesSuffix = "devices/v2"
         cylanceApiAuthSuffix    = "auth/v2/token"
-        cylanceApiMemSuffix     = "/memoryprotection/v2"
+        cylanceApiMemSuffix     = "memoryprotection/v2"
         cylanceApiRegions       = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
         devicePageSize          = 10000
         expirationSeconds       = 120
@@ -119,7 +119,7 @@
             13 = "RAM Scraping";
             22 = "Zero Allocate";
             23 = "DYLD Injection";
-            24 = "Malicous Payload";
+            24 = "Malicious Payload";
         }
         PSData                  = @{
 

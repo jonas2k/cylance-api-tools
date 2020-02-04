@@ -4,7 +4,7 @@ Collection of several Powershell cmdlets in order to execute certain tasks again
 
 ## Prerequisites
 
-The configured application needs the device privileges "read" and "delete token".
+The configured application needs the device privileges "read" and "delete token" as well as the memory protection privilege "read".
 
 ## Usage
 
@@ -30,7 +30,15 @@ Invoke-CylanceDuplicateCleanup -applicationId $appId -applicationSecret $appSecr
 Searches for inactive devices and removes those whose last activity was past the specified number of days.
 
 ```PowerShell
-Invoke-CylanceInactiveCleanup -inactiveDays 75 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId 
+Invoke-CylanceInactiveCleanup -inactiveDays 75 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
+```
+
+### Show-MemProtectionEvents
+
+Shows information about the 10 most recent memory protection events. The optional parameter `-count` specifies the amount of events to be fetched (between 1 and a maximum of 200).
+
+```PowerShell
+Show-MemProtectionEvents -count 20 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
 ```
 
 ### Region
