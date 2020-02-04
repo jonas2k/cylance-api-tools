@@ -114,7 +114,7 @@ function Get-Chunks {
 function Test-DateIsOutOfRange {
     Param(
         [parameter(Mandatory = $true)]
-        [datetime]$inputDate,
+        [DateTime]$inputDate,
         [parameter(Mandatory = $true)]
         [int]$daysBack
     )
@@ -146,7 +146,7 @@ function Get-CylanceDevices {
 function Get-FullCylanceDevice {
     Param(
         [parameter(Mandatory = $true)]
-        [array]$device,
+        [string]$deviceId,
         [parameter(Mandatory = $true)]
         [string]$bearerToken,
         [parameter(Mandatory = $true)]
@@ -158,7 +158,54 @@ function Get-FullCylanceDevice {
         "Accept"        = "application/json"
         "Authorization" = "Bearer $bearerToken"
     }
-    return Invoke-RestMethod -Method "GET" -Uri ("$(Get-CylanceApiUri -type "Devices" -region $region)/{0}" -f $device.id) -Headers $headers
+    return Invoke-RestMethod -Method "GET" -Uri ("$(Get-CylanceApiUri -type "Devices" -region $region)/{0}" -f $deviceId) -Headers $headers
+}
+
+function Get-MemProtectionEvents {
+    Param(
+        [parameter(Mandatory = $true)]
+        [ValidateRange(1,200)]
+        [int]$count,
+        [parameter(Mandatory = $true)]
+        [string]$bearerToken,
+        [parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [String]$region
+    )
+
+    $headers = @{
+        "Accept"        = "application/json"
+        "Authorization" = "Bearer $bearerToken"
+    }
+
+    $params = @{
+        "page"      = 1
+        "page_size" = $count
+    }
+    return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Mem" -region $region) -Body $params -Headers $headers
+}
+
+function Add-MemProtectionActionDescription {
+    Param(
+        [parameter(ValueFromPipeline)]
+        $event
+    )
+
+    $memProtectionActions = $MyInvocation.MyCommand.Module.PrivateData["memProtectionActions"]
+    if($memProtectionActions.ContainsKey($([int32]$event.action))) {
+        $event | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$event.action))
+    }
+}
+function Add-MemProtectionViolationTypeDescription {
+    Param (
+        [parameter(ValueFromPipeline)]
+        $event
+    )
+
+    $memProtectionViolationTypes = $MyInvocation.MyCommand.Module.PrivateData["memProtectionViolationTypes"]
+    if($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
+        $event | Add-Member -NotePropertyName "violation_type_description" -NotePropertyValue $($memProtectionViolationTypes.$([int32]$event.violation_type))
+    }
 }
 
 function Remove-WhitelistedDevices {
@@ -239,7 +286,7 @@ function Start-DeviceDeletion {
 function Get-CylanceApiUri {
     Param(
         [parameter(Mandatory = $true)]
-        [ValidateSet("Auth", "Devices")]
+        [ValidateSet("Auth", "Devices", "Mem")]
         [Array]$type,
         [parameter(Mandatory = $false)]
         [AllowEmptyString()]
@@ -265,4 +312,11 @@ function Write-Banner {
 '@
     Write-Host $bannerAsciiArt -ForegroundColor "Green"
     Write-Host ("{0} v{1} by {2}`n" -f $MyInvocation.MyCommand.Module.Name, $MyInvocation.MyCommand.Module.Version, $MyInvocation.MyCommand.Module.Author) -ForegroundColor "Green"
+}
+
+function Write-ExceptionToConsole {
+    Write-Host $_.Exception.Message -ForegroundColor "Red"
+    if ($null -ne $_.ErrorDetails.Message) {
+        Write-Host ($_.ErrorDetails.Message | ConvertFrom-Json).message -ForegroundColor "Red"
+    }
 }
