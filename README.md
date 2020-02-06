@@ -8,7 +8,7 @@ The configured application needs the device privileges "read" and "delete token"
 
 ## Usage
 
-Eventually set execution policy and import the module.
+If necessary, set execution policy and import the module afterwards.
 
 ```PowerShell
 Set-ExecutionPolicy RemoteSigned -Scope Process
@@ -55,6 +55,12 @@ Furthermore, you can avoid to enter appid, secret and tenant GUIDs directly into
 
 ```PowerShell
 ... -applicationId $env:appId -applicationSecret $env:appSecret -tenantId $env:tenId ...
+```
+
+Additionally, cmdlets will by default look for environment variables named `CylanceApiToolsAppId`, `CylanceApiToolsSecret` and `CylanceApiToolsTenantId` and use their corresponding values (the names can be adapted in the manifest file). If they exist, they will always take precendence over the parameters specified on the command line. Thus, the parameters can be omitted completely and the entire call is much clearer:
+
+```PowerShell
+Show-MemProtectionEvents -count 5
 ```
 
 ## Whitelisting devices

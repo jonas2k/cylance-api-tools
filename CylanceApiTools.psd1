@@ -90,29 +90,32 @@
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
     PrivateData          = @{
-        jwtIssuer               = "http://cylance.com"
-        cylanceApiBaseUri       = "https://protectapi.cylance.com/"
-        cylanceApiDevicesSuffix = "devices/v2"
-        cylanceApiAuthSuffix    = "auth/v2/token"
-        cylanceApiMemSuffix     = "memoryprotection/v2"
-        cylanceApiRegions       = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
-        devicePageSize          = 10000
-        expirationSeconds       = 120
-        memProtectionActions    = @{
+        AppIdEnvName                = "CylanceApiToolsAppId"
+        SecretEnvName               = "CylanceApiToolsSecret"
+        TenantIdEnvName             = "CylanceApiToolsTenantId"
+        jwtIssuer                   = "http://cylance.com"
+        cylanceApiBaseUri           = "https://protectapi.cylance.com/"
+        cylanceApiDevicesSuffix     = "devices/v2"
+        cylanceApiAuthSuffix        = "auth/v2/token"
+        cylanceApiMemSuffix         = "memoryprotection/v2"
+        cylanceApiRegions           = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
+        devicePageSize              = 10000
+        expirationSeconds           = 120
+        memProtectionActions        = @{
             0 = "None";
             1 = "Block";
             2 = "Terminate"
         }
         memProtectionViolationTypes = @{
-            1 = "Stack Pivot";
-            2 = "Stack Protect";
-            3 = "Overwrite Code";
-            4 = "Remote Allocation of Memory";
-            5 = "Remote Mapping of Memory";
-            6 = "Remote Write to Memory";
-            7 = "Remote Write PE to Memory";
-            8 = "Remote Overwrite Code";
-            9 = "Remote Unmap of Memory";
+            1  = "Stack Pivot";
+            2  = "Stack Protect";
+            3  = "Overwrite Code";
+            4  = "Remote Allocation of Memory";
+            5  = "Remote Mapping of Memory";
+            6  = "Remote Write to Memory";
+            7  = "Remote Write PE to Memory";
+            8  = "Remote Overwrite Code";
+            9  = "Remote Unmap of Memory";
             10 = "Remote Thread Creation";
             11 = "Remote APC Scheduled";
             12 = "LSASS Read";
@@ -121,7 +124,7 @@
             23 = "DYLD Injection";
             24 = "Malicious Payload";
         }
-        PSData                  = @{
+        PSData                      = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
             # Tags = @()

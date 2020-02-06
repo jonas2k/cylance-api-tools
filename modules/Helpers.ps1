@@ -1,14 +1,20 @@
+class AuthenticationData {
+    [string]$appId
+    [string]$secret
+    [string]$tenantId
+}
+
 function Get-JwtToken {
     Param (
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$appId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$secret,
         [parameter(Mandatory = $true)]
         [String]$issuer,
         [parameter(Mandatory = $true)]
         [int]$expirationSeconds,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId
     )
 
@@ -35,7 +41,7 @@ function Get-JwtToken {
     $jwtPayload = ConvertTo-Base64UrlEncoding $jwtPayloadJson
     $jwtSignature = Get-HMACSHA256 -Message "${jwtHeader}.${jwtPayload}" -secret $secret
 
-    return "$jwtHeader.$jwtPayload.$jwtSignature"
+    return "{0}.{1}.{2}" -f $jwtHeader, $jwtPayload, $jwtSignature
 }
 
 function ConvertTo-Base64UrlEncoding {
@@ -68,28 +74,67 @@ function Get-HMACSHA256 {
 
 function Get-BearerToken {
     Param (
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationSecret,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId,
         [parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]$region
     )
-
     $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
     $expirationSeconds = $MyInvocation.MyCommand.Module.PrivateData["expirationSeconds"]
-    $jwtToken = Get-JwtToken -appId $applicationId -secret $applicationSecret -tenantId $tenantId -expirationSeconds $expirationSeconds -issuer $jwtIssuer
+
+    $authenticationData = [AuthenticationData]@{
+        appId    = $appId
+        secret   = $applicationSecret
+        tenantId = $tenantId
+    }
+
+    Find-AuthenticationData -authenticationData $authenticationData
+    Test-AuthenticationData -authenticationData $authenticationData
+
+    $jwtToken = Get-JwtToken -appId $authenticationData.appId -secret $authenticationData.secret -tenantId $authenticationData.tenantId -expirationSeconds $expirationSeconds -issuer $jwtIssuer
 
     $headers = @{
         "Accept"       = "application/json"
         "Content-Type" = "application/json; charset=utf-8"
     }
-
     $body = ConvertTo-Json @{ "auth_token" = $jwtToken }
     return (Invoke-RestMethod -Method "POST" -Uri $(Get-CylanceApiUri -type "Auth" -region $region) -Body $body -Headers $headers).access_token
+}
+
+function Find-AuthenticationData {
+    param (
+        [parameter(Mandatory = $true)]
+        [AuthenticationData]$authenticationData
+    )
+
+    $applicationIdFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["AppIdEnvName"])
+    $applicationSecretFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["SecretEnvName"])
+    $tenantIdFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["TenantIdEnvName"])
+
+    if ($applicationIdFromEnv -and $applicationSecretFromEnv -and $tenantIdFromEnv) {
+        $authenticationData.appId = $applicationIdFromEnv
+        $authenticationData.secret = $applicationSecretFromEnv
+        $authenticationData.tenantId = $tenantIdFromEnv
+        Write-Host "Using authentication data stored in environment variables."
+    }
+    else {
+        Write-Host "Using parameter provided authentication data."
+    }
+}
+
+function Test-AuthenticationData {
+    param (
+        [parameter(Mandatory = $true)]
+        [AuthenticationData]$authenticationData
+    )
+    if (-not ($authenticationData.appId -and $authenticationData.secret -and $authenticationData.tenantId)) {
+        throw "Missing authentication data, provide them either by environment variables or by parameters."
+    }
 }
 
 function Get-Chunks {
@@ -139,7 +184,6 @@ function Get-CylanceDevices {
         "page"      = 1
         "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
     }
-
     return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers
 }
 
@@ -164,7 +208,7 @@ function Get-FullCylanceDevice {
 function Get-MemProtectionEvents {
     Param(
         [parameter(Mandatory = $true)]
-        [ValidateRange(1,200)]
+        [ValidateRange(1, 200)]
         [int]$count,
         [parameter(Mandatory = $true)]
         [string]$bearerToken,
@@ -192,7 +236,7 @@ function Add-MemProtectionActionDescription {
     )
 
     $memProtectionActions = $MyInvocation.MyCommand.Module.PrivateData["memProtectionActions"]
-    if($memProtectionActions.ContainsKey($([int32]$event.action))) {
+    if ($memProtectionActions.ContainsKey($([int32]$event.action))) {
         $event | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$event.action))
     }
 }
@@ -203,7 +247,7 @@ function Add-MemProtectionViolationTypeDescription {
     )
 
     $memProtectionViolationTypes = $MyInvocation.MyCommand.Module.PrivateData["memProtectionViolationTypes"]
-    if($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
+    if ($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
         $event | Add-Member -NotePropertyName "violation_type_description" -NotePropertyValue $($memProtectionViolationTypes.$([int32]$event.violation_type))
     }
 }

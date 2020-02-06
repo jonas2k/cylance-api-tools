@@ -1,10 +1,10 @@
 function Invoke-CylanceInactiveCleanup {
     Param (
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationSecret,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId,
         [parameter(Mandatory = $true)]
         [int]$inactiveDays,

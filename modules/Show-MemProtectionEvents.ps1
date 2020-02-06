@@ -1,13 +1,13 @@
 function Show-MemProtectionEvents {
     Param (
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationSecret,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId,
         [parameter(Mandatory = $false)]
-        [ValidateRange(1,200)]
+        [ValidateRange(1, 200)]
         [int]$count = 10,
         [parameter(Mandatory = $false)]
         [AllowEmptyString()]
@@ -36,15 +36,16 @@ function Show-MemProtectionEvents {
             $event | Add-MemProtectionViolationTypeDescription
         }
 
-        if($memProtectionEvents.Count -gt 0) {
-            Write-Host ($memProtectionEvents | Select-Object @{Name = 'Image'; Expression = { "$($_.image_name) ($($_.process_id))" }},
+        if ($memProtectionEvents.Count -gt 0) {
+            Write-Host ($memProtectionEvents | Select-Object @{Name = 'Image'; Expression = { "$($_.image_name) ($($_.process_id))" } },
                 @{Name = 'User'; Expression = { "$($_.user_name)" } },
                 @{Name = 'Device'; Expression = { "$($_.device_name)" } },
                 @{Name = 'Device policy'; Expression = { "$($_.device_policy)" } },
                 @{Name = 'Violation type'; Expression = { "$($_.violation_type_description)" } },
                 @{Name = 'Action'; Expression = { "$($_.action_description)" } },
                 @{Name = 'Created'; Expression = { $_.created } } | Format-Table -Wrap -AutoSize | Out-String)
-        } else {
+        }
+        else {
             Write-Host "No memory protection events were found."
         }
     }
