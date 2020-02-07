@@ -1,5 +1,5 @@
 function Show-MemProtectionEvents {
-    Param (
+    param(
         [parameter(Mandatory = $false)]
         [String]$applicationId,
         [parameter(Mandatory = $false)]
@@ -18,7 +18,7 @@ function Show-MemProtectionEvents {
     Write-Banner
     try {
         $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId -region $region
-        Write-Host "Fetching data, this may take a while."
+        Write-HostAs -mode "Info" -message "Fetching data, this may take a while."
         $response = Get-MemProtectionEvents -count $count -bearerToken $bearerToken -region $region
         $memProtectionEvents = $response.page_items | ForEach-Object { $_.created = [DateTime]$_.created; $_ }
 
@@ -29,7 +29,7 @@ function Show-MemProtectionEvents {
                 $event | Add-Member -NotePropertyName "device_policy" -NotePropertyValue $fullDevice.policy.name
             }
             catch {
-                Write-Error "Can't get full device details for $($device.name)."
+                Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name)."
                 Write-Error "$($device.name): $($_.Exception.Message)"
             }
             $event | Add-MemProtectionActionDescription
@@ -46,7 +46,7 @@ function Show-MemProtectionEvents {
                 @{Name = 'Created'; Expression = { $_.created } } | Format-Table -Wrap -AutoSize | Out-String)
         }
         else {
-            Write-Host "No memory protection events were found."
+            Write-HostAs -mode "Info" -message "No memory protection events were found."
         }
     }
     catch {

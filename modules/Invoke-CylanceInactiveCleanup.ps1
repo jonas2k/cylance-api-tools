@@ -1,5 +1,5 @@
 function Invoke-CylanceInactiveCleanup {
-    Param (
+    param(
         [parameter(Mandatory = $false)]
         [String]$applicationId,
         [parameter(Mandatory = $false)]
@@ -19,7 +19,7 @@ function Invoke-CylanceInactiveCleanup {
     Write-Banner
     try {
         $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId -region $region
-        Write-Host "Checking devices, this may take a while."
+        Write-HostAs -mode "Info" -message "Checking devices, this may take a while."
         $response = Get-CylanceDevices -bearerToken $bearerToken -region $region
 
         $offlineDevices = $response.page_items | Where-Object { $null -ne $_.id -and $_.state -eq "Offline" -and (Test-DateIsOutOfRange -inputDate $_.date_first_registered -daysBack 1) }
@@ -31,7 +31,7 @@ function Invoke-CylanceInactiveCleanup {
             try {
                 $fullDevice = Get-FullCylanceDevice -device $device.id -bearerToken $bearerToken -region $region
                 if ($null -ne $fullDevice -and $null -eq $fullDevice.date_offline) {
-                    Write-Host "Skipping $($fullDevice.name) since it seems to be online by now or there is no valid offline date."
+                    Write-HostAs -mode "Info" -message "Skipping $($fullDevice.name) since it seems to be online by now or there is no valid offline date."
                 }
                 else {
                     [DateTime]$offlineDate = $fullDevice.date_offline
@@ -41,7 +41,7 @@ function Invoke-CylanceInactiveCleanup {
                 }
             }
             catch {
-                Write-Error "Can't get full device details for $($device.name)."
+                Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name)."
                 Write-Error "$($device.name): $($_.Exception.Message)"
             }
         }
@@ -52,7 +52,7 @@ function Invoke-CylanceInactiveCleanup {
 
         if ($devicesToBeRemoved.Count -gt 0) {
 
-            Write-Host "Devices to be removed:"
+            Write-HostAs -mode "Info" -message "Devices to be removed:"
             Write-Host ($devicesToBeRemoved | Select-Object @{Name = 'Name'; Expression = { "$($_.name)" } },
                 @{Name = 'ID'; Expression = { "$($_.id)" } },
                 @{Name = 'State'; Expression = { "$($_.state)" } },
@@ -66,11 +66,11 @@ function Invoke-CylanceInactiveCleanup {
                 Start-DeviceDeletion -devices $devicesToBeRemoved -region $region
             }
             else {
-                Write-Host "Aborting."
+                Write-HostAs -mode "Info" -message "Aborting."
             }
         }
         else {
-            Write-Host "Nothing to do."
+            Write-HostAs -mode "Info" -message "Nothing to do."
         }
     }
     catch {

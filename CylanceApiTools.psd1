@@ -124,6 +124,11 @@
             23 = "DYLD Injection";
             24 = "Malicious Payload";
         }
+        outputFormats               = @{
+            "Info"    = @{ prefix = "[*]"; color = "" };
+            "Warning" = @{ prefix = "[!]"; color = "Yellow" };
+            "Error"   = @{ prefix = "[x]"; color = "Red" }
+        }
         PSData                      = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
