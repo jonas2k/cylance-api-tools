@@ -1,14 +1,20 @@
+class AuthenticationData {
+    [String]$appId
+    [String]$secret
+    [String]$tenantId
+}
+
 function Get-JwtToken {
-    Param (
-        [parameter(Mandatory = $true)]
+    param(
+        [parameter(Mandatory = $false)]
         [String]$appId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$secret,
         [parameter(Mandatory = $true)]
         [String]$issuer,
         [parameter(Mandatory = $true)]
         [int]$expirationSeconds,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId
     )
 
@@ -39,7 +45,7 @@ function Get-JwtToken {
 }
 
 function ConvertTo-Base64UrlEncoding {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [Object]$inputData
     )
@@ -53,7 +59,7 @@ function ConvertTo-Base64UrlEncoding {
 }
 
 function Get-HMACSHA256 {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [String]$message,
         [parameter(Mandatory = $true)]
@@ -67,33 +73,72 @@ function Get-HMACSHA256 {
 }
 
 function Get-BearerToken {
-    Param (
-        [parameter(Mandatory = $true)]
+    param(
+        [parameter(Mandatory = $false)]
         [String]$applicationId,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$applicationSecret,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [String]$tenantId,
         [parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]$region
     )
-
     $jwtIssuer = $MyInvocation.MyCommand.Module.PrivateData["jwtIssuer"]
     $expirationSeconds = $MyInvocation.MyCommand.Module.PrivateData["expirationSeconds"]
-    $jwtToken = Get-JwtToken -appId $applicationId -secret $applicationSecret -tenantId $tenantId -expirationSeconds $expirationSeconds -issuer $jwtIssuer
+
+    $authenticationData = [AuthenticationData]@{
+        appId    = $appId
+        secret   = $applicationSecret
+        tenantId = $tenantId
+    }
+
+    Find-AuthenticationData -authenticationData $authenticationData
+    Test-AuthenticationData -authenticationData $authenticationData
+
+    $jwtToken = Get-JwtToken -appId $authenticationData.appId -secret $authenticationData.secret -tenantId $authenticationData.tenantId -expirationSeconds $expirationSeconds -issuer $jwtIssuer
 
     $headers = @{
         "Accept"       = "application/json"
         "Content-Type" = "application/json; charset=utf-8"
     }
-
     $body = ConvertTo-Json @{ "auth_token" = $jwtToken }
     return (Invoke-RestMethod -Method "POST" -Uri $(Get-CylanceApiUri -type "Auth" -region $region) -Body $body -Headers $headers).access_token
 }
 
+function Find-AuthenticationData {
+    param(
+        [parameter(Mandatory = $true)]
+        [AuthenticationData]$authenticationData
+    )
+
+    $applicationIdFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["AppIdEnvName"])
+    $applicationSecretFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["SecretEnvName"])
+    $tenantIdFromEnv = [Environment]::GetEnvironmentVariable($MyInvocation.MyCommand.Module.PrivateData["TenantIdEnvName"])
+
+    if ($applicationIdFromEnv -and $applicationSecretFromEnv -and $tenantIdFromEnv) {
+        $authenticationData.appId = $applicationIdFromEnv
+        $authenticationData.secret = $applicationSecretFromEnv
+        $authenticationData.tenantId = $tenantIdFromEnv
+        Write-HostAs -mode "Info" -message "Using authentication data stored in environment variables."
+    }
+    else {
+        Write-HostAs -mode "Info" -message "Using parameter provided authentication data."
+    }
+}
+
+function Test-AuthenticationData {
+    param(
+        [parameter(Mandatory = $true)]
+        [AuthenticationData]$authenticationData
+    )
+    if (-not ($authenticationData.appId -and $authenticationData.secret -and $authenticationData.tenantId)) {
+        throw "Missing authentication data, provide them either by environment variables or by parameters."
+    }
+}
+
 function Get-Chunks {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [int]$chunkSize,
         [parameter(Mandatory = $true)]
@@ -112,7 +157,7 @@ function Get-Chunks {
 }
 
 function Test-DateIsOutOfRange {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [DateTime]$inputDate,
         [parameter(Mandatory = $true)]
@@ -122,9 +167,9 @@ function Test-DateIsOutOfRange {
 }
 
 function Get-CylanceDevices {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
-        [string]$bearerToken,
+        [String]$bearerToken,
         [parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]$region
@@ -139,16 +184,15 @@ function Get-CylanceDevices {
         "page"      = 1
         "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
     }
-
     return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers
 }
 
 function Get-FullCylanceDevice {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
-        [string]$deviceId,
+        [String]$deviceId,
         [parameter(Mandatory = $true)]
-        [string]$bearerToken,
+        [String]$bearerToken,
         [parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]$region
@@ -162,12 +206,12 @@ function Get-FullCylanceDevice {
 }
 
 function Get-MemProtectionEvents {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
-        [ValidateRange(1,200)]
+        [ValidateRange(1, 200)]
         [int]$count,
         [parameter(Mandatory = $true)]
-        [string]$bearerToken,
+        [String]$bearerToken,
         [parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]$region
@@ -186,30 +230,30 @@ function Get-MemProtectionEvents {
 }
 
 function Add-MemProtectionActionDescription {
-    Param(
+    param(
         [parameter(ValueFromPipeline)]
         $event
     )
 
     $memProtectionActions = $MyInvocation.MyCommand.Module.PrivateData["memProtectionActions"]
-    if($memProtectionActions.ContainsKey($([int32]$event.action))) {
+    if ($memProtectionActions.ContainsKey($([int32]$event.action))) {
         $event | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$event.action))
     }
 }
 function Add-MemProtectionViolationTypeDescription {
-    Param (
+    param(
         [parameter(ValueFromPipeline)]
         $event
     )
 
     $memProtectionViolationTypes = $MyInvocation.MyCommand.Module.PrivateData["memProtectionViolationTypes"]
-    if($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
+    if ($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
         $event | Add-Member -NotePropertyName "violation_type_description" -NotePropertyValue $($memProtectionViolationTypes.$([int32]$event.violation_type))
     }
 }
 
 function Remove-WhitelistedDevices {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [Array]$whitelistFile,
         [parameter(Mandatory = $true)]
@@ -231,23 +275,23 @@ function Remove-WhitelistedDevices {
         $results = $comparedDevices | Where-Object { $_.sideindicator -eq "<=" }
 
         if ($skippedDevices.Count -gt 0) {
-            Write-Host "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ",")." -ForegroundColor "Yellow"
+            Write-HostAs -mode "Warning" -message "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ",")."
         }
     }
     return $results
 }
 
 function Read-UserConfirmation {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [int]$deviceCount
     )
-    Write-Host "I'm about to delete $deviceCount devices. Are you sure? (y/n)" -ForegroundColor "Red"
+    Write-HostAs -mode "Warning" -message "I'm about to delete $deviceCount device(s). Are you sure? (y/n)"
     return Read-Host
 }
 
 function Start-DeviceDeletion {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [Alias("devices")]
         [Array]$devicesToBeRemoved,
@@ -272,7 +316,7 @@ function Start-DeviceDeletion {
         }
 
         try {
-            # For debugging: Write-Host $params
+            #DEBUG: Write-Host $params
             Invoke-RestMethod -Method "DELETE" -Uri $(Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers > $null
             $deletedDevicesCount += $group.Count
         }
@@ -280,11 +324,11 @@ function Start-DeviceDeletion {
             Write-Error "$($_.Exception.Message)"
         }
     }
-    Write-Host "Deleted $deletedDevicesCount device(s)."
+    Write-HostAs -mode "Info" -message "Deleted $deletedDevicesCount device(s)."
 }
 
 function Get-CylanceApiUri {
-    Param(
+    param(
         [parameter(Mandatory = $true)]
         [ValidateSet("Auth", "Devices", "Mem")]
         [Array]$type,
@@ -294,7 +338,7 @@ function Get-CylanceApiUri {
     )
     $cylanceApiUri = "{0}{1}" -f $MyInvocation.MyCommand.Module.PrivateData["cylanceApiBaseUri"], $MyInvocation.MyCommand.Module.PrivateData["cylanceApi{0}Suffix" -f $type]
     
-    if (![string]::IsNullOrEmpty($region)) {
+    if (![String]::IsNullOrEmpty($region)) {
         $regionKey = ($MyInvocation.MyCommand.Module.PrivateData["cylanceApiRegions"])[$region]
         $cylanceApiUri = $cylanceApiUri.Insert($cylanceApiUri.IndexOf("."), $regionKey)
     }
@@ -319,4 +363,17 @@ function Write-ExceptionToConsole {
     if ($null -ne $_.ErrorDetails.Message) {
         Write-Host ($_.ErrorDetails.Message | ConvertFrom-Json).message -ForegroundColor "Red"
     }
+}
+
+function Write-HostAs {
+    param (
+        [parameter(Mandatory = $true)]
+        [ValidateSet("Info", "Error", "Warning")]
+        [String]$mode,
+        [parameter(Mandatory = $true)]
+        [String]$message
+    )
+    $outputFormat = $MyInvocation.MyCommand.Module.PrivateData.outputFormats[$mode]
+    # TODO: When PS7 is GA, ternary here
+    Write-Host ("{0} {1}" -f $outputFormat.prefix, $message) -ForegroundColor $(if ($outputFormat.color) { $outputFormat.color } else { $((Get-Host).UI.RawUI.ForegroundColor) } )
 }
