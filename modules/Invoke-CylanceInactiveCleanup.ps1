@@ -41,8 +41,7 @@ function Invoke-CylanceInactiveCleanup {
                 }
             }
             catch {
-                Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name)."
-                Write-Error "$($device.name): $($_.Exception.Message)"
+                Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name): $($_.Exception.Message)"
             }
         }
 
