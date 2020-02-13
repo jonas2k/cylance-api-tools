@@ -321,7 +321,7 @@ function Start-DeviceDeletion {
             $deletedDevicesCount += $group.Count
         }
         catch {
-            Write-Error "$($_.Exception.Message)"
+            Write-HostAs -mode "Error" -message "$($_.Exception.Message)"
         }
     }
     Write-HostAs -mode "Info" -message "Deleted $deletedDevicesCount device(s)."
@@ -359,9 +359,9 @@ function Write-Banner {
 }
 
 function Write-ExceptionToConsole {
-    Write-Host $_.Exception.Message -ForegroundColor "Red"
+    Write-HostAs -mode "Error" -message $_.Exception.Message
     if ($null -ne $_.ErrorDetails.Message) {
-        Write-Host ($_.ErrorDetails.Message | ConvertFrom-Json).message -ForegroundColor "Red"
+        Write-HostAs -mode "Error" -message ($_.ErrorDetails.Message | ConvertFrom-Json).message
     }
 }
 
