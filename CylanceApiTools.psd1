@@ -103,8 +103,9 @@
         expirationSeconds           = 120
         memProtectionActions        = @{
             0 = "None";
-            1 = "Block";
-            2 = "Terminate";
+            1 = "Warning";
+            2 = "Block";
+            3 = "Terminate";
         }
         memProtectionViolationTypes = @{
             1  = "Stack Pivot";
