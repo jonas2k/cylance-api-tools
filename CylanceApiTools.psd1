@@ -104,7 +104,7 @@
         memProtectionActions        = @{
             0 = "None";
             1 = "Block";
-            2 = "Terminate"
+            2 = "Terminate";
         }
         memProtectionViolationTypes = @{
             1  = "Stack Pivot";
