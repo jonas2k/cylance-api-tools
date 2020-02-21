@@ -33,12 +33,12 @@ Searches for inactive devices and removes those whose last activity was past the
 Invoke-CylanceInactiveCleanup -inactiveDays 75 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
 ```
 
-### Show-MemProtectionEvents
+### Show-CylanceMemProtectionEvents
 
 Shows information about the 10 most recent memory protection events. The optional parameter `-count` specifies the amount of events to be fetched (between 1 and a maximum of 200).
 
 ```PowerShell
-Show-MemProtectionEvents -count 20 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
+Show-CylanceMemProtectionEvents -count 20 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
 ```
 
 ### Region
@@ -60,7 +60,7 @@ Furthermore, you can avoid to enter appid, secret and tenant GUIDs directly into
 Additionally, cmdlets will by default look for environment variables named `CylanceApiToolsAppId`, `CylanceApiToolsSecret` and `CylanceApiToolsTenantId` and use their corresponding values (the names can be adapted in the manifest file). If they exist, they will always take precendence over the parameters specified on the command line. Thus, the parameters can be omitted completely and the entire call is much clearer:
 
 ```PowerShell
-Show-MemProtectionEvents -count 5
+Show-CylanceMemProtectionEvents -count 5
 ```
 
 ## Whitelisting devices

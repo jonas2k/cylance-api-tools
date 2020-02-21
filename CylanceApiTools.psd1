@@ -8,7 +8,7 @@
     # RootModule = ''
 
     # Version number of this module.
-    ModuleVersion        = '1.3'
+    ModuleVersion        = '1.4'
 
     # Supported PSEditions
     CompatiblePSEditions = @("Core")
@@ -64,11 +64,11 @@
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules        = @(".\modules\Invoke-CylanceDuplicateCleanup.ps1",
         ".\modules\Invoke-CylanceInactiveCleanup.ps1",
-        ".\modules\Show-MemProtectionEvents.ps1",
+        ".\modules\Show-CylanceMemProtectionEvents.ps1",
         ".\modules\Helpers.ps1")
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport    = @("Invoke-CylanceDuplicateCleanup", "Invoke-CylanceInactiveCleanup", "Show-MemProtectionEvents")
+    FunctionsToExport    = @("Invoke-CylanceDuplicateCleanup", "Invoke-CylanceInactiveCleanup", "Show-CylanceMemProtectionEvents")
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport      = @()
@@ -103,8 +103,9 @@
         expirationSeconds           = 120
         memProtectionActions        = @{
             0 = "None";
-            1 = "Block";
-            2 = "Terminate"
+            1 = "Warning";
+            2 = "Block";
+            3 = "Terminate";
         }
         memProtectionViolationTypes = @{
             1  = "Stack Pivot";
