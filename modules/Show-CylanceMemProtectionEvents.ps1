@@ -1,4 +1,4 @@
-function Show-MemProtectionEvents {
+function Show-CylanceMemProtectionEvents {
     param(
         [parameter(Mandatory = $false)]
         [String]$applicationId,
