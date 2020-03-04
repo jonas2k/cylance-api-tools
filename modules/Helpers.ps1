@@ -275,7 +275,7 @@ function Remove-WhitelistedDevices {
         $results = $comparedDevices | Where-Object { $_.sideindicator -eq "<=" }
 
         if ($skippedDevices.Count -gt 0) {
-            Write-HostAs -mode "Warning" -message "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ",")."
+            Write-HostAs -mode "Warning" -message "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ", ")."
         }
     }
     return $results
