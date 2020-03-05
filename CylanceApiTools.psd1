@@ -29,7 +29,7 @@
     Description          = 'Collection of several Powershell cmdlets in order to execute certain tasks against the Cylance API.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion    = '6.0'
+    PowerShellVersion    = '7.0'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
