@@ -4,7 +4,12 @@ Collection of several Powershell cmdlets in order to execute certain tasks again
 
 ## Prerequisites
 
-The configured application needs the device privileges "read" and "delete token" as well as the memory protection privilege "read".
+To use all cmdlets, the configured application needs the following privileges:
+
+| Category          | Privilege           |
+| ----------------- | ------------------- |
+| Devices           | Read, delete token  |
+| Memory Protection | Read                |
 
 ## Usage
 
@@ -15,7 +20,7 @@ Set-ExecutionPolicy RemoteSigned -Scope Process
 Import-Module .\CylanceApiTools.psd1
 ```
 
-Alternatively, you may want to install the module to a `$env:PSModulePath`, e.g. `C:\Windows\System32\WindowsPowerShell\v1.0\Modules\CylanceApiTools`.
+Alternatively, you may want to install (copy) the module files to a `$env:PSModulePath`, e.g. `C:\Windows\System32\WindowsPowerShell\v1.0\Modules\CylanceApiTools`.
 
 ### Invoke-CylanceDuplicateCleanup
 
@@ -43,7 +48,7 @@ Show-CylanceMemProtectionEvents -count 20 -applicationId $appId -applicationSecr
 
 ### Region
 
-The optional parameter `-region` lets you specify your service endpoint region your organization belongs to. Valid values are `apne1`, `au`, `euc1`, `sae1` and `us`. You can also tab-cycle through these values when typing the command. If the parameter is omitted, North America is used as the default region. For example, if you want to query the european servers:
+The optional parameter `-region` lets you specify your service endpoint region your organization belongs to. Valid values are `apne1`, `au`, `euc1`, `sae1` and `us`. You can also tab-cycle through these values when typing the command. If the parameter is omitted, North America is used as the default region. For example, if you want to query the European servers:
 
 ```PowerShell
 ... -region "euc1" ...

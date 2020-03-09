@@ -275,7 +275,7 @@ function Remove-WhitelistedDevices {
         $results = $comparedDevices | Where-Object { $_.sideindicator -eq "<=" }
 
         if ($skippedDevices.Count -gt 0) {
-            Write-HostAs -mode "Warning" -message "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ",")."
+            Write-HostAs -mode "Warning" -message "Skipping whitelisted device(s) $(($skippedDevices | Select-Object -expand name) -join ", ")."
         }
     }
     return $results
@@ -374,6 +374,5 @@ function Write-HostAs {
         [String]$message
     )
     $outputFormat = $MyInvocation.MyCommand.Module.PrivateData.outputFormats[$mode]
-    # TODO: When PS7 is GA, ternary here
-    Write-Host ("{0} {1}" -f $outputFormat.prefix, $message) -ForegroundColor $(if ($outputFormat.color) { $outputFormat.color } else { $((Get-Host).UI.RawUI.ForegroundColor) } )
+    Write-Host ("{0} {1}" -f $outputFormat.prefix, $message) -ForegroundColor $($outputFormat.color ? $outputFormat.color : $((Get-Host).UI.RawUI.ForegroundColor))
 }
