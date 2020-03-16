@@ -41,7 +41,7 @@ function Invoke-CylanceDuplicateCleanup {
                     $fullDevicesToBeRemoved += Get-FullCylanceDevice -device $device.id -bearerToken $bearerToken -region $region
                 }
                 catch {
-                    WWrite-HostAs -mode "Error" -message "Can't get full device details for $($device.name). Adding device without additional information."
+                    Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name). Adding device without additional information."
                     $fullDevicesToBeRemoved += $device
                 }
             }
