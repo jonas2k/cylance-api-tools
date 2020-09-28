@@ -53,7 +53,7 @@ function Invoke-CylanceDuplicateCleanup {
                 @{Name = 'Registration date'; Expression = { ($_.date_first_registered) } },
                 @{Name = 'Offline date'; Expression = { ($_.date_offline) } },
                 @{Name = 'Last user'; Expression = { "$($_.last_logged_in_user)" } },
-                @{Name = 'OS'; Expression = { "$($_.os_version)" } } | Sort-Object -Property date_first_registered | Format-Table -Wrap -AutoSize | Out-String)
+                @{Name = 'OS'; Expression = { "$($_.os_version)" } } | Sort-Object -Property 'Registration date' | Format-Table -Wrap -AutoSize | Out-String)
             $confirmation = Read-UserConfirmation -deviceCount $fullDevicesToBeRemoved.Count
 
             if ($confirmation -eq 'y') {
