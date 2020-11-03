@@ -182,9 +182,49 @@ function Get-CylanceDevices {
 
     $params = @{
         "page"      = 1
-        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["devicePageSize"]
+        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["maxPageSize"]
     }
-    return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Devices" -region $region) -Body $params -Headers $headers
+
+    $devicesCylanceApiUri = Get-CylanceApiUri -type "Devices" -region $region
+    return (Get-CylanceItems -itemCylanceApiUri $devicesCylanceApiUri -params $params -headers $headers)
+}
+
+function Get-CylanceItems {
+    param (
+        [parameter(Mandatory = $true)]
+        [String]$itemCylanceApiUri,
+        [parameter(Mandatory = $true)]
+        [hashtable]$params,
+        [parameter(Mandatory = $true)]
+        [hashtable]$headers,
+        [parameter(Mandatory = $false)]
+        [int]$itemLimit = 0
+    )
+
+    $items = New-Object -TypeName "System.Collections.ArrayList"
+
+    $initialResponse = Invoke-RestMethod -Method "GET" -Uri $itemCylanceApiUri -Body $params -Headers $headers
+    $items.AddRange($initialResponse.page_items)
+
+    if ($initialResponse.total_pages -gt 1 -and ($itemLimit ? $items.Count -lt $itemLimit : $True)) {
+        for ($i = $params.page + 1; $i -le $initialResponse.total_pages; $i++) {
+            $params.page = $i
+            $response = Invoke-RestMethod -Method "GET" -Uri $itemCylanceApiUri -Body $params -Headers $headers
+            $items.AddRange($response.page_items)
+
+            if ($itemLimit -and ($items.Count -gt $itemLimit)) {
+                break
+            }
+        }
+    }
+    if ($itemLimit -and ($items.Count -gt $itemLimit)) {
+        $items = $items.GetRange(0, $itemLimit)
+    }
+
+    if ((-not $itemLimit -and $initialResponse.total_number_of_items -ne $items.Count) -or ($itemLimit -and $itemLimit -ne $items.Count)) {
+        Write-HostAs -mode "Warning" -message "Item count reported by API doesn't match actually returned item count, please proceed with caution."
+    }
+    return $items
 }
 
 function Get-FullCylanceDevice {
@@ -208,7 +248,7 @@ function Get-FullCylanceDevice {
 function Get-MemProtectionEvents {
     param(
         [parameter(Mandatory = $true)]
-        [ValidateRange(1, 200)]
+        [ValidateRange(1, 1000)]
         [int]$count,
         [parameter(Mandatory = $true)]
         [String]$bearerToken,
@@ -224,31 +264,33 @@ function Get-MemProtectionEvents {
 
     $params = @{
         "page"      = 1
-        "page_size" = $count
+        "page_size" = $MyInvocation.MyCommand.Module.PrivateData["maxPageSize"]
     }
-    return Invoke-RestMethod -Method "GET" -Uri (Get-CylanceApiUri -type "Mem" -region $region) -Body $params -Headers $headers
+
+    $memProtectionCylanceApiUri = Get-CylanceApiUri -type "Mem" -region $region
+    return (Get-CylanceItems -itemCylanceApiUri $memProtectionCylanceApiUri -headers $headers -params $params -itemLimit $count)
 }
 
 function Add-MemProtectionActionDescription {
     param(
         [parameter(ValueFromPipeline)]
-        $event
+        $memProtectionEvent
     )
 
     $memProtectionActions = $MyInvocation.MyCommand.Module.PrivateData["memProtectionActions"]
-    if ($memProtectionActions.ContainsKey($([int32]$event.action))) {
-        $event | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$event.action))
+    if ($memProtectionActions.ContainsKey($([int32]$memProtectionEvent.action))) {
+        $memProtectionEvent | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$evmemProtectionEventent.action))
     }
 }
 function Add-MemProtectionViolationTypeDescription {
     param(
         [parameter(ValueFromPipeline)]
-        $event
+        $memProtectionEvent
     )
 
     $memProtectionViolationTypes = $MyInvocation.MyCommand.Module.PrivateData["memProtectionViolationTypes"]
-    if ($memProtectionViolationTypes.ContainsKey($([int32]$event.violation_type))) {
-        $event | Add-Member -NotePropertyName "violation_type_description" -NotePropertyValue $($memProtectionViolationTypes.$([int32]$event.violation_type))
+    if ($memProtectionViolationTypes.ContainsKey($([int32]$memProtectionEvent.violation_type))) {
+        $memProtectionEvent | Add-Member -NotePropertyName "violation_type_description" -NotePropertyValue $($memProtectionViolationTypes.$([int32]$memProtectionEvent.violation_type))
     }
 }
 
