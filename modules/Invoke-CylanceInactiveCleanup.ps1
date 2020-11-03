@@ -22,7 +22,7 @@ function Invoke-CylanceInactiveCleanup {
         Write-HostAs -mode "Info" -message "Checking devices, this may take a while."
         $response = Get-CylanceDevices -bearerToken $bearerToken -region $region
 
-        $offlineDevices = $response.page_items | Where-Object { $null -ne $_.id -and $_.state -eq "Offline" -and (Test-DateIsOutOfRange -inputDate $_.date_first_registered -daysBack 1) }
+        $offlineDevices = $response | Where-Object { $null -ne $_.id -and $_.state -eq "Offline" -and (Test-DateIsOutOfRange -inputDate $_.date_first_registered -daysBack 1) }
 
         [Array]$devicesToBeRemoved = @()
         $daysAgo = (Get-Date).AddDays(-$inactiveDays)

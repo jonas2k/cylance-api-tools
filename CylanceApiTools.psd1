@@ -8,7 +8,7 @@
     # RootModule = ''
 
     # Version number of this module.
-    ModuleVersion        = '1.41'
+    ModuleVersion        = '1.42'
 
     # Supported PSEditions
     CompatiblePSEditions = @("Core")
@@ -99,7 +99,7 @@
         cylanceApiAuthSuffix        = "auth/v2/token"
         cylanceApiMemSuffix         = "memoryprotection/v2"
         cylanceApiRegions           = @{apne1 = "-apne1"; au = "-au"; euc1 = "-euc1"; sae1 = "-sae1"; us = ".us" }
-        devicePageSize              = 10000
+        maxPageSize                 = 200
         expirationSeconds           = 120
         memProtectionActions        = @{
             0 = "None";

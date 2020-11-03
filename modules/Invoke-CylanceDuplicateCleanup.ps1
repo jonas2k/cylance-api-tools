@@ -20,7 +20,7 @@ function Invoke-CylanceDuplicateCleanup {
         Write-HostAs -mode "Info" -message "Checking devices, this may take a while."
         $response = Get-CylanceDevices -bearerToken $bearerToken -region $region
 
-        $duplicates = $response.page_items | Group-Object -Property "name" | Where-Object { $_.count -ge 2 }
+        $duplicates = $response | Group-Object -Property "name" | Where-Object { $_.count -ge 2 }
 
         [Array]$devicesToBeRemoved = @()
     

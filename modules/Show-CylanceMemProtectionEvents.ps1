@@ -7,7 +7,7 @@ function Show-CylanceMemProtectionEvents {
         [parameter(Mandatory = $false)]
         [String]$tenantId,
         [parameter(Mandatory = $false)]
-        [ValidateRange(1, 200)]
+        [ValidateRange(1, 1000)]
         [int]$count = 10,
         [parameter(Mandatory = $false)]
         [AllowEmptyString()]
@@ -20,20 +20,20 @@ function Show-CylanceMemProtectionEvents {
         $bearerToken = Get-BearerToken -applicationId $applicationId -applicationSecret $applicationSecret -tenantId $tenantId -region $region
         Write-HostAs -mode "Info" -message "Fetching data, this may take a while."
         $response = Get-MemProtectionEvents -count $count -bearerToken $bearerToken -region $region
-        $memProtectionEvents = $response.page_items | ForEach-Object { $_.created = [DateTime]$_.created; $_ }
+        $memProtectionEvents = $response | ForEach-Object { $_.created = [DateTime]$_.created; $_ }
 
-        foreach ($event in $memProtectionEvents) {
+        foreach ($memProtectionEvent in $memProtectionEvents) {
             try {
-                $fullDevice = Get-FullCylanceDevice -device $event.device_id -bearerToken $bearerToken -region $region
-                $event | Add-Member -NotePropertyName "device_name" -NotePropertyValue $fullDevice.name
-                $event | Add-Member -NotePropertyName "device_policy" -NotePropertyValue $fullDevice.policy.name
+                $fullDevice = Get-FullCylanceDevice -device $memProtectionEvent.device_id -bearerToken $bearerToken -region $region
+                $memProtectionEvent | Add-Member -NotePropertyName "device_name" -NotePropertyValue $fullDevice.name
+                $memProtectionEvent | Add-Member -NotePropertyName "device_policy" -NotePropertyValue $fullDevice.policy.name
             }
             catch {
                 Write-HostAs -mode "Error" -message "Can't get full device details for $($device.name)."
                 Write-Error "$($device.name): $($_.Exception.Message)"
             }
-            $event | Add-MemProtectionActionDescription
-            $event | Add-MemProtectionViolationTypeDescription
+            $memProtectionEvent | Add-MemProtectionActionDescription
+            $memProtectionEvent | Add-MemProtectionViolationTypeDescription
         }
 
         if ($memProtectionEvents.Count -gt 0) {
