@@ -198,7 +198,7 @@ function Get-CylanceItems {
         [parameter(Mandatory = $true)]
         [hashtable]$headers,
         [parameter(Mandatory = $false)]
-        [int]$itemLimit = $null
+        [int]$itemLimit = 0
     )
 
     $items = New-Object -TypeName "System.Collections.ArrayList"
@@ -206,7 +206,7 @@ function Get-CylanceItems {
     $initialResponse = Invoke-RestMethod -Method "GET" -Uri $itemCylanceApiUri -Body $params -Headers $headers
     $items.AddRange($initialResponse.page_items)
 
-    if ($initialResponse.total_pages -gt 1 -and ($items.Count -lt $itemLimit)) {
+    if ($initialResponse.total_pages -gt 1 -and ($itemLimit ? $items.Count -lt $itemLimit : $True)) {
         for ($i = $params.page + 1; $i -le $initialResponse.total_pages; $i++) {
             $params.page = $i
             $response = Invoke-RestMethod -Method "GET" -Uri $itemCylanceApiUri -Body $params -Headers $headers
@@ -221,7 +221,7 @@ function Get-CylanceItems {
         $items = $items.GetRange(0, $itemLimit)
     }
 
-    if (($null -eq $itemLimit -and $initialResponse.total_number_of_items -ne $items.Count) -or ($null -ne $itemLimit -and $itemLimit -ne $items.Count)) {
+    if ((-not $itemLimit -and $initialResponse.total_number_of_items -ne $items.Count) -or ($itemLimit -and $itemLimit -ne $items.Count)) {
         Write-HostAs -mode "Warning" -message "Item count reported by API doesn't match actually returned item count, please proceed with caution."
     }
     return $items
