@@ -40,7 +40,7 @@ Invoke-CylanceInactiveCleanup -inactiveDays 75 -applicationId $appId -applicatio
 
 ### Show-CylanceMemProtectionEvents
 
-Shows information about the 10 most recent memory protection events. The optional parameter `-count` specifies the amount of events to be fetched (between 1 and a maximum of 200).
+Shows information about the 10 most recent memory protection events. The optional parameter `-count` specifies the amount of events to be fetched (between 1 and a maximum of 1000).
 
 ```PowerShell
 Show-CylanceMemProtectionEvents -count 20 -applicationId $appId -applicationSecret $appSecret -tenantId $tenId
