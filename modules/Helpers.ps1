@@ -279,7 +279,7 @@ function Add-MemProtectionActionDescription {
 
     $memProtectionActions = $MyInvocation.MyCommand.Module.PrivateData["memProtectionActions"]
     if ($memProtectionActions.ContainsKey($([int32]$memProtectionEvent.action))) {
-        $memProtectionEvent | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$evmemProtectionEventent.action))
+        $memProtectionEvent | Add-Member -NotePropertyName "action_description" -NotePropertyValue $($memProtectionActions.$([int32]$memProtectionEvent.action))
     }
 }
 function Add-MemProtectionViolationTypeDescription {
